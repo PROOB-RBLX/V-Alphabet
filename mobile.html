@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>V-Alphabet Ultimate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* --- THEME VARIABLES DEFAULT (Dark) --- */
+        :root {
+            --bg-main: #121212;
+            --bg-panel: #18181b;
+            --bg-hover: #27272a;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent: #3b82f6;   /* Blue-500 */
+            --border: #27272a;
+            --correct: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            overflow-x: hidden; /* Prevent horizontal scroll on mobile transitions */
+        }
+
+        /* Utility Classes */
+        .theme-bg-main { background-color: var(--bg-main); }
+        .theme-bg-panel { background-color: var(--bg-panel); }
+        .theme-bg-hover:hover { background-color: var(--bg-hover); }
+        .theme-text-main { color: var(--text-main); }
+        .theme-text-muted { color: var(--text-muted); }
+        .theme-text-accent { color: var(--accent); }
+        .theme-border { border-color: var(--border); }
+        .theme-divide { border-color: var(--border); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        .active-nav {
+            background-color: var(--bg-hover);
+            border-left: 4px solid var(--accent);
+        }
+
+        .bg-pattern {
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        @keyframes speak-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-speak { animation: speak-pulse 0.5s ease-in-out; }
+
+        /* Sidebar Transition for Mobile */
+        .sidebar-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- ICONS ---
+        const IconMenu = ({ size = 24 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>);
+        const IconHome = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>);
+        const IconBook = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>);
+        const IconChart = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>);
+        const IconAward = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>);
+        const IconSettings = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>);
+        const IconPlay = ({ size = 20, fill = "none" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>);
+        const IconX = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>);
+        const IconCheck = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>);
+        const IconSpeaker = ({ size = 20, className="" }) => (<svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>);
+        const IconChevronDown = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>);
+        const IconRefresh = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>);
+        const IconSun = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>);
+        const IconMoon = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>);
+        const IconStar = ({ size = 20, fill = "none" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>);
+        const IconTimer = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+        const IconActivity = ({ size = 20 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>);
+
+        // --- THEME DEFINITIONS ---
+        // Colors: bg-main, bg-panel, text-main, text-muted, accent, border
+        const THEMES_LIST = {
+            light: [
+                { id: 'light', name: 'Light', colors: { main: '#f4f4f5', panel: '#ffffff', hover: '#e4e4e7', text: '#18181b', muted: '#71717a', accent: '#3b82f6', border: '#e4e4e7' } },
+                { id: 'amethyst', name: 'Amethyst', colors: { main: '#fdf4ff', panel: '#fae8ff', hover: '#f5d0fe', text: '#4a044e', muted: '#a21caf', accent: '#c026d3', border: '#f0abfc' } },
+                { id: 'rose', name: 'Rose', colors: { main: '#ffe4e6', panel: '#fff1f2', hover: '#fda4af', text: '#881337', muted: '#be123c', accent: '#e11d48', border: '#fecdd3' } },
+                { id: 'paper', name: 'Paper', colors: { main: '#f5f5dc', panel: '#fdfbf7', hover: '#eceae0', text: '#44403c', muted: '#78716c', accent: '#d97706', border: '#e7e5e4' } },
+            ],
+            dark: [
+                { id: 'default', name: 'Default', colors: { main: '#121212', panel: '#18181b', hover: '#27272a', text: '#e4e4e7', muted: '#a1a1aa', accent: '#3b82f6', border: '#27272a' } },
+                { id: 'monkeytype', name: 'Monkeytype', colors: { main: '#323437', panel: '#2c2e31', hover: '#646669', text: '#e2b714', muted: '#646669', accent: '#e2b714', border: '#323437' } },
+                { id: 'nord', name: 'Nord', colors: { main: '#2e3440', panel: '#3b4252', hover: '#434c5e', text: '#eceff4', muted: '#d8dee9', accent: '#88c0d0', border: '#4c566a' } },
+                { id: 'yukata', name: 'Yukata', colors: { main: '#101216', panel: '#181a1f', hover: '#282c34', text: '#e06c75', muted: '#5c6370', accent: '#e06c75', border: '#282c34' } },
+                { id: 'dusk', name: 'Dusk Voyager', colors: { main: '#0f172a', panel: '#1e293b', hover: '#334155', text: '#38bdf8', muted: '#94a3b8', accent: '#0ea5e9', border: '#1e293b' } },
+                { id: 'matrix', name: 'Matrix', colors: { main: '#000000', panel: '#0a0a0a', hover: '#1a1a1a', text: '#00ff41', muted: '#008f11', accent: '#00ff41', border: '#003b00' } },
+                { id: 'forest', name: 'Forest', colors: { main: '#052e16', panel: '#064e3b', hover: '#065f46', text: '#4ade80', muted: '#166534', accent: '#22c55e', border: '#14532d' } },
+                { id: 'incognito', name: 'Incognito', colors: { main: '#171717', panel: '#262626', hover: '#404040', text: '#f97316', muted: '#737373', accent: '#f97316', border: '#404040' } },
+            ]
+        };
+
+        // --- EXPANDED ACHIEVEMENTS ---
+        const ACHIEVEMENTS_DATA = [
+            // Milestones
+            { id: 101, title: 'First Steps', desc: 'Get your first correct answer', points: 10, icon: '🎯', cat: 'Milestones', rarity: 'Common' },
+            { id: 102, title: 'Century Scholar', desc: 'Answer 100 questions correctly', points: 100, icon: '📚', cat: 'Milestones', rarity: 'Uncommon' },
+            { id: 103, title: 'Knowledge Seeker', desc: 'Answer 500 questions correctly', points: 250, icon: '🎓', cat: 'Milestones', rarity: 'Rare' },
+            { id: 104, title: 'Master Scholar', desc: 'Answer 1000 questions correctly', points: 500, icon: '👑', cat: 'Milestones', rarity: 'Epic' },
+            { id: 105, title: 'Legendary Master', desc: 'Answer 5000 questions correctly', points: 1000, icon: '🏆', cat: 'Milestones', rarity: 'Legendary' },
+            
+            // Streaks
+            { id: 201, title: 'Streak Starter', desc: 'Achieve a 5-answer streak', points: 25, icon: '🔥', cat: 'Streaks', rarity: 'Common' },
+            { id: 202, title: 'Hot Streak', desc: 'Achieve a 10-answer streak', points: 50, icon: '☀️', cat: 'Streaks', rarity: 'Uncommon' },
+            { id: 203, title: 'Streak Legend', desc: 'Achieve a 25-answer streak', points: 150, icon: '⚡', cat: 'Streaks', rarity: 'Rare' },
+            { id: 204, title: 'Unstoppable', desc: 'Achieve a 50-answer streak', points: 300, icon: '🚀', cat: 'Streaks', rarity: 'Epic' },
+
+            // Consistency
+            { id: 301, title: 'Dedicated Learner', desc: 'Complete 10 training sessions', points: 75, icon: '📖', cat: 'Consistency', rarity: 'Common' },
+            { id: 302, title: 'Persistent Student', desc: 'Complete 50 training sessions', points: 200, icon: '🎯', cat: 'Consistency', rarity: 'Uncommon' },
+            { id: 303, title: 'Training Master', desc: 'Complete 100 training sessions', points: 400, icon: '🥋', cat: 'Consistency', rarity: 'Rare' },
+
+            // Mastery (Accuracy)
+            { id: 401, title: 'Precision Novice', desc: 'Maintain 80% accuracy over 50 answers', points: 100, icon: '🏹', cat: 'Mastery', rarity: 'Uncommon' },
+            { id: 402, title: 'Accuracy Expert', desc: 'Maintain 90% accuracy over 100 answers', points: 250, icon: '🧿', cat: 'Mastery', rarity: 'Rare' },
+            { id: 403, title: 'Perfectionist', desc: 'Maintain 95% accuracy over 200 answers', points: 500, icon: '💎', cat: 'Mastery', rarity: 'Epic' },
+            
+            // Audio Specific
+            { id: 501, title: 'Good Ear', desc: 'Identify your first sound correctly', points: 10, icon: '👂', cat: 'Audio', rarity: 'Common' },
+            { id: 502, title: 'Audio Master', desc: 'Get 50 correct audio answers', points: 150, icon: '🎼', cat: 'Audio', rarity: 'Rare' },
+        ];
+
+        // --- DATA ---
+        const CONSONANT_DATA = [
+            { id: 'g1', title: 'Môi (Labials)', chars: [
+                { letter: 'b', example: 'bè bạn', ipa: '/b-/', sound: 'bờ' },
+                { letter: 'm', example: 'mệt mỏi', ipa: '/m-/', sound: 'mờ' },
+                { letter: 'ph', example: 'phờ phạc', ipa: '/f-/', sound: 'phờ' },
+                { letter: 'v', example: 'vờ vịt', ipa: '/v-/', sound: 'vờ' }
+            ]},
+            { id: 'g2', title: 'Đầu lưỡi (Apicals)', chars: [
+                { letter: 't', example: 'tí tẹo', ipa: '/t-/', sound: 'tờ' },
+                { letter: 'th', example: 'tha thướt', ipa: '/tʰ-/', sound: 'thờ' },
+                { letter: 'đ', example: 'đủng đỉnh', ipa: '/d-/', sound: 'đờ' },
+                { letter: 'n', example: 'no nê', ipa: '/n-/', sound: 'nờ' }
+            ]},
+            { id: 'g3', title: 'Lưỡi trước (Front-Linguals)', chars: [
+                { letter: 'd/gi', example: 'da dẻ', ipa: '/z-/', sound: 'dờ' },
+                { letter: 'r', example: 'rườm rà', ipa: '/z-/ or /r/', sound: 'rờ' },
+                { letter: 'x', example: 'xa xôi', ipa: '/s-/', sound: 'xờ' },
+                { letter: 's', example: 'san sẻ', ipa: '/ʂ-/', sound: 'sờ' }
+            ]},
+            { id: 'g4', title: 'Mặt lưỡi (Laminals)', chars: [
+                { letter: 'ch', example: 'chim chóc', ipa: '/c-/', sound: 'chờ' },
+                { letter: 'tr', example: 'trang trại', ipa: '/ʈ-/', sound: 'trờ' },
+                { letter: 'nh', example: 'nhí nhảnh', ipa: '/ɲ-/', sound: 'nhờ' },
+                { letter: 'l', example: 'lươn lẹo', ipa: '/l-/', sound: 'lờ' }
+            ]},
+            { id: 'g5', title: 'Gốc lưỡi (Velars)', chars: [
+                { letter: 'k/c/q', example: 'kim, cá', ipa: '/k-/', sound: 'ca' },
+                { letter: 'kh', example: 'khắt khe', ipa: '/x-/', sound: 'khờ' },
+                { letter: 'ng', example: 'ngô, nghĩ', ipa: '/ŋ-/', sound: 'ngờ' },
+                { letter: 'g', example: 'gà, ghi', ipa: '/ɣ-/', sound: 'gờ' },
+                { letter: 'h', example: 'hát hò', ipa: '/h-/', sound: 'hờ' }
+            ]}
+        ];
+
+        const VOWEL_DATA = [
+            { id: 'v1', title: 'Không dấu mũ (Unmarked)', chars: [
+                { letter: 'a', example: 'ba mẹ', ipa: '/aː/', sound: 'a' },
+                { letter: 'e', example: 'em bé', ipa: '/ɛ/', sound: 'e' },
+                { letter: 'i', example: 'im lặng', ipa: '/i/', sound: 'i' },
+                { letter: 'o', example: 'to nhỏ', ipa: '/ɔ/', sound: 'o' },
+                { letter: 'u', example: 'đu đủ', ipa: '/u/', sound: 'u' },
+                { letter: 'y', example: 'y tế', ipa: '/i/', sound: 'i' }
+            ]},
+            { id: 'v2', title: 'Có dấu mũ (Circumflex)', chars: [
+                { letter: 'â', example: 'cân đo', ipa: '/ə/', sound: 'ớ' },
+                { letter: 'ê', example: 'bê đê', ipa: '/e/', sound: 'ê' },
+                { letter: 'ô', example: 'cô giáo', ipa: '/o/', sound: 'ô' }
+            ]},
+            { id: 'v3', title: 'Dấu trăng/móc (Breve/Horn)', chars: [
+                { letter: 'ă', example: 'ăn uống', ipa: '/a/', sound: 'á' },
+                { letter: 'ơ', example: 'cơ sở', ipa: '/əː/', sound: 'ơ' },
+                { letter: 'ư', example: 'thư từ', ipa: '/ɨ/', sound: 'ư' }
+            ]},
+            { id: 'v4', title: 'Nguyên âm đôi (Diphthongs)', chars: [
+                { letter: 'ia', example: 'chia ly', ipa: '/iə/', sound: 'ia' },
+                { letter: 'ua', example: 'mua bán', ipa: '/uə/', sound: 'ua' },
+                { letter: 'ưa', example: 'trưa hè', ipa: '/ɨə/', sound: 'ưa' }
+            ]}
+        ];
+
+        // --- COMPONENTS ---
+
+        // 1. MOBILE HEADER (Only visible on mobile)
+        const MobileHeader = ({ onMenuClick }) => (
+            <div className="md:hidden sticky top-0 z-40 theme-bg-panel border-b theme-border px-4 py-3 flex items-center justify-between shadow-md">
+                 <div className="font-bold theme-text-main flex items-center gap-2">
+                    <span className="theme-text-accent">V-</span>Alphabet
+                </div>
+                <button onClick={onMenuClick} className="p-2 -mr-2 theme-text-muted hover:theme-text-main rounded hover:theme-bg-hover">
+                    <IconMenu size={24} />
+                </button>
+            </div>
+        );
+
+        const HomeScreen = ({ onNavigate }) => (
+            <div className="max-w-4xl mx-auto py-12 px-6 flex flex-col items-center text-center">
+                <div className="mb-8 p-4 rounded-full theme-bg-panel theme-border border">
+                     <span className="text-4xl">🇻🇳</span>
+                </div>
+                <h1 className="text-3xl md:text-5xl font-bold mb-4 pb-2 theme-text-accent">
+                    Welcome to V-Alphabet!
+                </h1>
+                <p className="theme-text-muted max-w-lg mb-12 text-base md:text-lg">
+                    An aesthetic, minimalist platform for mastering the Vietnamese alphabet. 
+                    Choose a module to practice visually or test your listening skills.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                    <button onClick={() => onNavigate('consonants')} className="group relative p-8 rounded-2xl theme-bg-panel theme-border border hover:border-blue-500 hover:bg-zinc-800/10 transition-all text-left">
+                        <div className="text-2xl font-serif text-blue-500 mb-3 group-hover:scale-110 transition-transform origin-left">b/ph</div>
+                        <h3 className="text-xl font-bold theme-text-main mb-1">Phụ Âm</h3>
+                        <p className="text-sm theme-text-muted">Consonants & clusters</p>
+                    </button>
+                    
+                    <button onClick={() => onNavigate('vowels')} className="group relative p-8 rounded-2xl theme-bg-panel theme-border border hover:border-pink-500 hover:bg-zinc-800/10 transition-all text-left">
+                        <div className="text-3xl font-serif text-pink-500 mb-3 group-hover:scale-110 transition-transform origin-left">ă/â</div>
+                        <h3 className="text-xl font-bold theme-text-main mb-1">Nguyên Âm</h3>
+                        <p className="text-sm theme-text-muted">Vowels & tones</p>
+                    </button>
+                    
+                    <button className="group relative p-8 rounded-2xl theme-bg-panel theme-border border opacity-50 cursor-not-allowed text-left">
+                        <div className="text-3xl font-serif text-emerald-500 mb-3">từ</div>
+                        <h3 className="text-xl font-bold theme-text-main mb-1">Từ Vựng</h3>
+                        <p className="text-sm theme-text-muted">Vocabulary (Coming Soon)</p>
+                    </button>
+                </div>
+            </div>
+        );
+
+        const ProgressScreen = ({ stats, charHistory, onReset }) => {
+            const accuracy = stats.attempts > 0 ? ((stats.correct / stats.attempts) * 100).toFixed(1) : '0.0';
+            
+            const charArray = Object.entries(charHistory).map(([char, data]) => ({
+                char, 
+                acc: ((data.correct / data.attempts) * 100),
+                tries: data.attempts
+            }));
+
+            const needPractice = charArray
+                .filter(item => item.acc < 60 || item.tries < 3)
+                .sort((a, b) => a.acc - b.acc)
+                .slice(0, 5); 
+
+            const mastered = charArray
+                .filter(item => item.acc >= 90 && item.tries >= 5)
+                .sort((a, b) => b.tries - a.tries);
+
+            return (
+                <div className="max-w-6xl mx-auto py-8">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                        <h2 className="text-2xl md:text-3xl font-bold theme-text-main">Your Progress</h2>
+                        <button onClick={onReset} className="w-full md:w-auto text-sm text-red-400 hover:text-red-300 border border-red-900 bg-red-900/20 px-4 py-2 rounded-lg transition-colors">
+                            Reset Progress
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div className="theme-bg-panel p-4 md:p-6 rounded-xl theme-border border">
+                            <div className="text-xs md:text-sm theme-text-muted mb-1">Total Sessions</div>
+                            <div className="text-2xl md:text-3xl font-bold theme-text-main">{stats.sessions}</div>
+                        </div>
+                        <div className="theme-bg-panel p-4 md:p-6 rounded-xl theme-border border">
+                            <div className="text-xs md:text-sm theme-text-muted mb-1">Overall Accuracy</div>
+                            <div className="text-2xl md:text-3xl font-bold text-blue-400">{accuracy}%</div>
+                            <div className="text-xs theme-text-muted mt-1">{stats.correct}/{stats.attempts} correct</div>
+                        </div>
+                        <div className="theme-bg-panel p-4 md:p-6 rounded-xl theme-border border">
+                            <div className="text-xs md:text-sm theme-text-muted mb-1">Best Streak</div>
+                            <div className="text-2xl md:text-3xl font-bold text-orange-400">{stats.bestStreak}</div>
+                        </div>
+                        <div className="theme-bg-panel p-4 md:p-6 rounded-xl theme-border border">
+                            <div className="text-xs md:text-sm theme-text-muted mb-1">Chars Seen</div>
+                            <div className="text-2xl md:text-3xl font-bold text-emerald-400">{Object.keys(charHistory).length}</div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="theme-bg-panel rounded-xl theme-border border overflow-hidden min-h-[300px]">
+                            <div className="p-4 border-b theme-divide font-bold theme-text-main">Need More Practice</div>
+                            <div className="divide-y theme-divide">
+                                {needPractice.length === 0 && stats.attempts === 0 && (
+                                    <div className="p-8 text-center theme-text-muted italic">Start practicing to see data...</div>
+                                )}
+                                {needPractice.map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center p-4 hover:bg-zinc-800/50">
+                                        <span className="text-2xl font-serif text-red-400">{item.char}</span>
+                                        <div className="text-right">
+                                            <div className="text-sm font-bold theme-text-main">{item.acc.toFixed(1)}%</div>
+                                            <div className="text-xs theme-text-muted">{item.tries} attempts</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="theme-bg-panel rounded-xl theme-border border overflow-hidden min-h-[300px]">
+                            <div className="p-4 border-b theme-divide font-bold theme-text-main">Mastered Characters (>90%)</div>
+                            <div className="divide-y theme-divide">
+                                {mastered.length === 0 && (
+                                    <div className="p-8 text-center theme-text-muted italic">Keep practicing to master characters...</div>
+                                )}
+                                {mastered.map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center p-4 hover:bg-zinc-800/50">
+                                        <span className="text-2xl font-serif text-green-400">{item.char}</span>
+                                        <div className="text-right">
+                                            <div className="text-sm font-bold theme-text-main">{item.acc.toFixed(1)}%</div>
+                                            <div className="text-xs theme-text-muted">{item.tries} attempts</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StatsScreen = ({ stats }) => {
+            const formatTime = (ms) => {
+                if (!ms) return "0.00s";
+                if (ms < 1000) return `${ms}ms`;
+                const s = Math.floor(ms / 1000);
+                const m = Math.floor(s / 60);
+                const rs = s % 60;
+                return m > 0 ? `${m}m ${rs}s` : `${rs}s`;
+            };
+
+            const accuracy = stats.attempts > 0 ? ((stats.correct / stats.attempts) * 100).toFixed(1) : '0.0';
+            const avgTime = stats.correct > 0 ? (stats.totalTime / stats.correct).toFixed(2) : '0.00';
+
+            return (
+                <div className="max-w-6xl mx-auto py-8">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-8 flex items-center justify-center gap-3 theme-text-main">
+                        <IconActivity size={32} /> Statistics
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* General */}
+                        <div className="space-y-4">
+                            <h3 className="theme-text-muted text-lg font-medium">General</h3>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span className="flex items-center gap-2"><IconTimer size={16}/> Training Time</span>
+                                <span className="font-bold theme-text-main">{formatTime(stats.totalTime)}</span>
+                            </div>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span className="flex items-center gap-2"><IconCheck size={16}/> Correct Answers</span>
+                                <span className="font-bold theme-text-main">{stats.correct}</span>
+                            </div>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span className="flex items-center gap-2"><IconX size={16}/> Wrong Answers</span>
+                                <span className="font-bold theme-text-main">{stats.attempts - stats.correct}</span>
+                            </div>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span className="flex items-center gap-2">◎ Accuracy</span>
+                                <span className="font-bold theme-text-accent">{accuracy}%</span>
+                            </div>
+                        </div>
+
+                        {/* Answers */}
+                        <div className="space-y-4">
+                            <h3 className="theme-text-muted text-lg font-medium">Answers</h3>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span>Average Time</span>
+                                <span className="font-bold theme-text-main">{avgTime}ms</span>
+                            </div>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span>Fastest Answer</span>
+                                <span className="font-bold theme-text-accent">{stats.fastest ? `${stats.fastest}ms` : '-'}</span>
+                            </div>
+                            <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span>Slowest Answer</span>
+                                <span className="font-bold text-red-400">{stats.slowest ? `${stats.slowest}ms` : '-'}</span>
+                            </div>
+                        </div>
+
+                        {/* Characters */}
+                        <div className="space-y-4">
+                             <h3 className="theme-text-muted text-lg font-medium">Characters</h3>
+                             <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span>Unique Characters</span>
+                                <span className="font-bold theme-text-main">12</span>
+                            </div>
+                             <div className="theme-bg-panel p-4 rounded theme-border border flex justify-between">
+                                <span>Highest Streak</span>
+                                <span className="font-bold text-yellow-500">{stats.bestStreak}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const AchievementsScreen = ({ unlockedIds }) => {
+            const categories = ['Milestones', 'Streaks', 'Consistency', 'Mastery', 'Audio'];
+            const [filter, setFilter] = useState('All');
+
+            const filteredAch = filter === 'All' ? ACHIEVEMENTS_DATA : ACHIEVEMENTS_DATA.filter(a => a.cat === filter);
+            
+            const totalPoints = ACHIEVEMENTS_DATA.reduce((acc, curr) => unlockedIds.includes(curr.id) ? acc + curr.points : acc, 0);
+
+            return (
+                <div className="max-w-6xl mx-auto py-8">
+                    <div className="text-center mb-8 md:mb-12">
+                        <h2 className="text-3xl font-bold mb-2 theme-text-accent">🏆 Achievements</h2>
+                        <div className="flex justify-center gap-4 md:gap-8 mt-6">
+                            <div className="theme-bg-panel px-4 py-3 md:px-6 md:py-4 rounded-lg theme-border border text-center">
+                                <div className="text-xl md:text-2xl font-bold theme-text-main">{unlockedIds.length}</div>
+                                <div className="text-xs theme-text-muted">Unlocked</div>
+                            </div>
+                            <div className="theme-bg-panel px-4 py-3 md:px-6 md:py-4 rounded-lg theme-border border text-center">
+                                <div className="text-xl md:text-2xl font-bold theme-text-main">{ACHIEVEMENTS_DATA.length}</div>
+                                <div className="text-xs theme-text-muted">Total</div>
+                            </div>
+                            <div className="theme-bg-panel px-4 py-3 md:px-6 md:py-4 rounded-lg theme-border border text-center">
+                                <div className="text-xl md:text-2xl font-bold text-yellow-400">{totalPoints}</div>
+                                <div className="text-xs theme-text-muted">Points</div>
+                            </div>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="w-full max-w-xl mx-auto mt-6 px-4 md:px-0">
+                             <div className="flex justify-between text-xs theme-text-muted mb-1">
+                                <span>Overall Progress</span>
+                                <span>{Math.round((unlockedIds.length / ACHIEVEMENTS_DATA.length) * 100)}%</span>
+                            </div>
+                            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-blue-500 to-pink-500" style={{width: `${(unlockedIds.length / ACHIEVEMENTS_DATA.length) * 100}%`}}></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex flex-wrap gap-2 mb-8 justify-center">
+                        <button onClick={() => setFilter('All')} className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium border ${filter === 'All' ? 'bg-white text-black border-white' : 'theme-border theme-text-muted hover:theme-text-main'}`}>All Achievements</button>
+                        {categories.map(cat => (
+                             <button key={cat} onClick={() => setFilter(cat)} className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium border ${filter === cat ? 'bg-white text-black border-white' : 'theme-border theme-text-muted hover:theme-text-main'}`}>{cat}</button>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredAch.map(ach => {
+                            const isUnlocked = unlockedIds.includes(ach.id);
+                            // Rarity Colors
+                            let rarityColor = "text-zinc-500";
+                            let rarityBg = "bg-zinc-800";
+                            if(ach.rarity === 'Uncommon') { rarityColor = "text-green-400"; rarityBg = "bg-green-900/30"; }
+                            if(ach.rarity === 'Rare') { rarityColor = "text-blue-400"; rarityBg = "bg-blue-900/30"; }
+                            if(ach.rarity === 'Epic') { rarityColor = "text-purple-400"; rarityBg = "bg-purple-900/30"; }
+                            if(ach.rarity === 'Legendary') { rarityColor = "text-red-400"; rarityBg = "bg-red-900/30"; }
+
+                            return (
+                                <div key={ach.id} className={`p-5 rounded-xl border relative overflow-hidden group ${isUnlocked ? 'theme-bg-panel theme-border' : 'bg-black/20 border-zinc-800 opacity-60'}`}>
+                                    <div className="flex gap-4 relative z-10">
+                                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl shrink-0 ${isUnlocked ? 'bg-white shadow-lg' : 'bg-zinc-800 grayscale'}`}>
+                                            {ach.icon}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className={`font-bold truncate ${isUnlocked ? 'theme-text-main' : 'theme-text-muted'}`}>{ach.title}</h4>
+                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${rarityBg} ${rarityColor} border border-white/5`}>{ach.rarity}</span>
+                                            </div>
+                                            <p className="text-sm theme-text-muted leading-tight mb-3">{ach.desc}</p>
+                                            
+                                            <div className="flex justify-between items-center border-t theme-divide pt-3">
+                                                <div className="text-xs font-bold text-yellow-500 flex items-center gap-1">
+                                                    🏆 {ach.points}
+                                                </div>
+                                                <div className={`text-xs ${isUnlocked ? 'text-green-500' : 'text-zinc-600'}`}>
+                                                    {isUnlocked ? 'Unlocked ✓' : 'Locked'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const PreferencesScreen = ({ activeTheme, onChangeTheme }) => {
+            const [baseFilter, setBaseFilter] = useState('all'); 
+
+            return (
+                <div className="max-w-5xl mx-auto py-8">
+                    <h2 className="text-3xl font-bold mb-8 flex items-center gap-3 theme-text-main">
+                        <IconSettings size={28} /> Display
+                    </h2>
+                    
+                    {/* Base Filter */}
+                    <div className="mb-10">
+                        <h3 className="text-sm theme-text-muted font-bold mb-3 uppercase tracking-wider flex items-center gap-2">
+                             Base
+                        </h3>
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                             <button 
+                                onClick={() => setBaseFilter('light')}
+                                className={`flex items-center gap-2 px-8 py-3 rounded-lg font-medium border-2 transition-all ${baseFilter === 'light' ? 'border-blue-500 bg-white text-black' : 'border-transparent bg-zinc-200 text-zinc-600 hover:bg-white'}`}
+                             >
+                                <IconSun size={18} /> Light
+                             </button>
+                             <button 
+                                onClick={() => setBaseFilter('dark')}
+                                className={`flex items-center gap-2 px-8 py-3 rounded-lg font-medium border-2 transition-all ${baseFilter === 'dark' ? 'border-blue-500 bg-zinc-900 text-white' : 'border-transparent bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                             >
+                                <IconMoon size={18} /> Dark
+                             </button>
+                             <button 
+                                onClick={() => setBaseFilter('all')}
+                                className={`px-4 py-3 rounded-lg font-medium border border-zinc-700 text-zinc-500 text-sm hover:text-white`}
+                             >
+                                Show All
+                             </button>
+                        </div>
+                    </div>
+
+                    {/* Light Themes */}
+                    {(baseFilter === 'all' || baseFilter === 'light') && (
+                        <div className="mb-10">
+                            <h3 className="text-sm theme-text-muted font-bold mb-4 uppercase tracking-wider flex items-center gap-2">
+                                <IconSun size={16} /> Light Presets
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {THEMES_LIST.light.map((theme) => (
+                                    <button 
+                                        key={theme.id} 
+                                        onClick={() => onChangeTheme(theme)}
+                                        className={`group relative h-14 rounded-lg border-2 transition-all flex items-center justify-center overflow-hidden ${activeTheme.id === theme.id ? 'border-blue-500 ring-2 ring-blue-500/20' : 'theme-border hover:border-zinc-400'}`}
+                                        style={{ backgroundColor: theme.colors.main }}
+                                    >
+                                        <span className="relative z-10 font-medium text-sm" style={{ color: theme.colors.text }}>{theme.name}</span>
+                                        {activeTheme.id === theme.id && <div className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500"></div>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dark Themes */}
+                    {(baseFilter === 'all' || baseFilter === 'dark') && (
+                        <div className="mb-10">
+                            <h3 className="text-sm theme-text-muted font-bold mb-4 uppercase tracking-wider flex items-center gap-2">
+                                <IconMoon size={16} /> Dark Presets
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {THEMES_LIST.dark.map((theme) => (
+                                    <button 
+                                        key={theme.id} 
+                                        onClick={() => onChangeTheme(theme)}
+                                        className={`group relative h-14 rounded-lg border-2 transition-all flex items-center justify-center overflow-hidden ${activeTheme.id === theme.id ? 'border-blue-500 ring-2 ring-blue-500/20' : 'theme-border hover:border-zinc-400'}`}
+                                        style={{ backgroundColor: theme.colors.main }}
+                                    >
+                                        <span className="relative z-10 font-medium text-sm" style={{ color: theme.colors.text }}>{theme.name}</span>
+                                        {activeTheme.id === theme.id && <div className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500"></div>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const PracticeScreen = ({ title, desc, data, onSessionUpdate, onSessionStart }) => {
+            const [selectedGroups, setSelectedGroups] = useState(data.map(g => g.id));
+            const [quizMode, setQuizMode] = useState(null); 
+
+            const toggleGroup = (id) => {
+                setSelectedGroups(prev => 
+                    prev.includes(id) 
+                    ? prev.filter(g => g !== id)
+                    : [...prev, id]
+                );
+            };
+
+            const startMode = (mode) => {
+                onSessionStart();
+                setQuizMode(mode);
+            };
+
+            return (
+                <div className="max-w-5xl mx-auto">
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-bold theme-text-main mb-2">{title}</h2>
+                        <p className="theme-text-muted text-sm md:text-base">{desc}</p>
+                    </div>
+
+                    <div className="theme-bg-panel p-3 rounded-xl theme-border border flex flex-col md:flex-row items-center justify-between gap-4 mb-6 sticky top-14 md:top-4 z-20 shadow-xl">
+                        <div className="flex items-center gap-2 px-2">
+                            <button onClick={() => setSelectedGroups(data.map(g => g.id))} className="text-xs font-medium theme-text-muted hover:theme-text-main px-3 py-1.5 theme-bg-hover rounded">Select All</button>
+                            <button onClick={() => setSelectedGroups([])} className="text-xs font-medium theme-text-muted hover:theme-text-main px-3 py-1.5 theme-bg-hover rounded">Clear</button>
+                        </div>
+                        
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <button 
+                                onClick={() => startMode('visual')}
+                                disabled={selectedGroups.length === 0}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all transform hover:scale-105 ${selectedGroups.length > 0 ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}
+                            >
+                                <IconPlay size={16} fill="currentColor" />
+                                Visual
+                            </button>
+                            
+                             <button 
+                                onClick={() => startMode('audio')}
+                                disabled={selectedGroups.length === 0}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all transform hover:scale-105 ${selectedGroups.length > 0 ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/20' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}
+                            >
+                                <IconSpeaker size={18} />
+                                Listening
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-20 md:pb-0">
+                        {data.map(group => (
+                            <div 
+                                key={group.id}
+                                className={`p-4 rounded-xl border transition-all cursor-pointer select-none group ${selectedGroups.includes(group.id) ? 'theme-bg-panel border-blue-600' : 'theme-bg-main theme-border hover:theme-border'}`}
+                                onClick={() => toggleGroup(group.id)}
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-sm font-medium theme-text-muted group-hover:theme-text-main">{group.title}</span>
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedGroups.includes(group.id) ? 'bg-blue-600 border-blue-600' : 'border-zinc-600'}`}>
+                                        {selectedGroups.includes(group.id) && <IconCheck size={14} color="white" />}
+                                    </div>
+                                </div>
+                                <div className="text-xl theme-text-main font-light tracking-wider">
+                                    {group.chars.map(c => c.letter).join(' • ')}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {quizMode === 'visual' && <InGameUI mode="visual" activeGroups={data.filter(g => selectedGroups.includes(g.id))} allData={data} onClose={() => setQuizMode(null)} onAnswer={(isCorrect, char) => onSessionUpdate(isCorrect, char, 'visual')} />}
+                    {quizMode === 'audio' && <InGameUI mode="audio" activeGroups={data.filter(g => selectedGroups.includes(g.id))} allData={data} onClose={() => setQuizMode(null)} onAnswer={(isCorrect, char) => onSessionUpdate(isCorrect, char, 'audio')} />}
+                </div>
+            );
+        };
+
+        const InGameUI = ({ mode, activeGroups, allData, onClose, onAnswer }) => {
+            const [currentQuestion, setCurrentQuestion] = useState(null);
+            const [options, setOptions] = useState([]);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [isCorrect, setIsCorrect] = useState(null);
+            const [sessionStats, setSessionStats] = useState({ correct: 0, wrong: 0, stars: 0 });
+            const [streak, setStreak] = useState(0);
+            
+            // Audio specific
+            const [isSpeaking, setIsSpeaking] = useState(false);
+            const [availableVoices, setAvailableVoices] = useState([]);
+            const [selectedVoiceURI, setSelectedVoiceURI] = useState(null);
+
+            const charPool = useMemo(() => activeGroups.flatMap(g => g.chars), [activeGroups]);
+            const allChars = useMemo(() => allData.flatMap(g => g.chars), [allData]);
+
+            // --- Voice Loading (Audio Mode Only) ---
+            useEffect(() => {
+                if (mode === 'audio') {
+                    const loadVoices = () => {
+                        const voices = window.speechSynthesis.getVoices();
+                        if (voices.length > 0) {
+                            setAvailableVoices(voices);
+                            if (!selectedVoiceURI) {
+                                const vietVoice = voices.find(v => v.lang.includes('vi'));
+                                if (vietVoice) setSelectedVoiceURI(vietVoice.voiceURI);
+                                else setSelectedVoiceURI(voices[0].voiceURI);
+                            }
+                        }
+                    };
+                    loadVoices();
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+            }, [mode]);
+
+            // --- KEYBOARD SHORTCUTS ---
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (selectedOption) return; // Prevent answering if already selected
+                    
+                    if (['1', '2', '3'].includes(e.key)) {
+                        const index = parseInt(e.key) - 1;
+                        if (options[index]) {
+                            handleSelection(options[index]);
+                        }
+                    }
+                };
+                
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [options, selectedOption]);
+
+            const speak = (text) => {
+                if (mode !== 'audio' || !('speechSynthesis' in window)) return;
+                setIsSpeaking(true);
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (selectedVoiceURI) {
+                    const voice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+                    if (voice) {
+                        utterance.voice = voice;
+                        utterance.lang = voice.lang;
+                    }
+                }
+                utterance.rate = 0.8;
+                utterance.onend = () => setIsSpeaking(false);
+                window.speechSynthesis.speak(utterance);
+            };
+
+            const generateQuestion = () => {
+                if (charPool.length === 0) return;
+                const questionChar = charPool[Math.floor(Math.random() * charPool.length)];
+                
+                const distractors = [];
+                while(distractors.length < 2) {
+                    const randomChar = allChars[Math.floor(Math.random() * allChars.length)];
+                    if (randomChar.letter !== questionChar.letter && !distractors.includes(randomChar)) distractors.push(randomChar);
+                }
+                const newOptions = [...distractors, questionChar].sort(() => Math.random() - 0.5);
+                setCurrentQuestion(questionChar);
+                setOptions(newOptions);
+                setSelectedOption(null);
+                setIsCorrect(null);
+                
+                if (mode === 'audio') setTimeout(() => speak(questionChar.sound), 500);
+            };
+
+            useEffect(() => { generateQuestion(); }, []);
+
+            const handleSelection = (opt) => {
+                if (selectedOption) return;
+                setSelectedOption(opt);
+                const correct = opt.letter === currentQuestion.letter;
+                
+                if (correct) {
+                    setIsCorrect(true);
+                    setStreak(s => s + 1);
+                    setSessionStats(prev => {
+                        const newCorrect = prev.correct + 1;
+                        const newStars = Math.floor(newCorrect / 20);
+                        return { ...prev, correct: newCorrect, stars: newStars };
+                    });
+                    if (mode === 'audio') speak("Đúng");
+                    onAnswer(true, currentQuestion.letter);
+                    setTimeout(generateQuestion, 1000);
+                } else {
+                    setIsCorrect(false);
+                    setStreak(0);
+                    setSessionStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
+                    if (mode === 'audio') speak("Sai");
+                    onAnswer(false, currentQuestion.letter);
+                    setTimeout(generateQuestion, 1500);
+                }
+            };
+
+            if (!currentQuestion) return null;
+
+            return (
+                <div className="fixed inset-0 z-[60] flex flex-col theme-bg-main">
+                    {/* Top Bar */}
+                    <div className="h-16 flex items-center px-4 md:px-6 border-b theme-border z-20 bg-black/20 backdrop-blur-md">
+                        <button onClick={onClose} className="theme-text-muted hover:theme-text-main p-2 rounded-lg hover:theme-bg-hover">
+                            <IconX size={24} />
+                        </button>
+                        
+                        {/* Progress Meter */}
+                        <div className="flex-1 mx-4 md:mx-6 h-2 bg-zinc-800 rounded-full overflow-hidden relative">
+                            <div className="h-full bg-white/80 transition-all duration-300" style={{width: `${(sessionStats.correct % 20) * 5}%`}}></div>
+                        </div>
+
+                        <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold font-mono">
+                            <div className="flex items-center gap-1 text-green-500 bg-green-900/20 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-green-900/30">
+                                <IconCheck size={16}/> {sessionStats.correct}
+                            </div>
+                            <div className="flex items-center gap-1 text-red-500 bg-red-900/20 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-red-900/30">
+                                <IconX size={16}/> {sessionStats.wrong}
+                            </div>
+                            <div className="hidden md:flex items-center gap-1 text-yellow-400 bg-yellow-900/20 px-3 py-1.5 rounded-lg border border-yellow-900/30 shadow-[0_0_15px_rgba(250,204,21,0.15)]">
+                                <IconStar size={16} fill="currentColor"/> {sessionStats.stars}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-y-auto">
+                        {selectedOption && (
+                            <div className={`absolute top-4 md:top-10 px-6 py-2 rounded-full font-medium text-sm transition-all animate-pulse z-30 ${isCorrect ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}>
+                                {isCorrect ? "Correct!" : `Incorrect, that was ${currentQuestion.letter}`}
+                            </div>
+                        )}
+
+                        <div className="mb-8 md:mb-16 text-center mt-8 md:mt-0">
+                            {mode === 'visual' ? (
+                                <>
+                                    <div className="text-[100px] md:text-[120px] font-light theme-text-main leading-none select-none">{currentQuestion.letter}</div>
+                                    <div className="mt-4 theme-text-muted font-mono text-lg opacity-50">{currentQuestion.ipa}</div>
+                                </>
+                            ) : (
+                                <>
+                                    <button 
+                                        onClick={() => speak(currentQuestion.sound)}
+                                        className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center border-4 transition-all transform hover:scale-105 active:scale-95 ${isSpeaking ? 'border-amber-500 bg-amber-900/20 animate-speak' : 'theme-border theme-bg-panel hover:border-amber-500/50'}`}
+                                    >
+                                        <IconSpeaker size={60} className={isSpeaking ? 'text-amber-500' : 'theme-text-muted'} />
+                                    </button>
+                                    <div className="mt-8 theme-text-muted font-mono text-sm opacity-50">Click to listen</div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl pb-10">
+                            {options.map((opt, idx) => {
+                                let btnClass = "theme-bg-panel hover:theme-bg-hover theme-border theme-text-main";
+                                if (selectedOption) {
+                                    if (opt.letter === currentQuestion.letter) btnClass = "bg-green-500/20 border-green-500 text-green-100";
+                                    else if (opt === selectedOption) btnClass = "bg-red-500/20 border-red-500 text-red-100";
+                                    else btnClass = "opacity-40 theme-border";
+                                }
+                                return (
+                                    <button 
+                                        key={idx} 
+                                        onClick={() => handleSelection(opt)} 
+                                        className={`relative h-20 md:h-28 rounded-2xl border-2 text-xl md:text-2xl font-medium transition-all flex flex-col items-center justify-center gap-1 ${btnClass}`}
+                                    >
+                                        <div className="absolute top-2 left-3 text-xs opacity-50 font-mono border border-current px-1.5 rounded hidden md:block">
+                                            {idx + 1}
+                                        </div>
+                                        <span>{mode === 'visual' ? opt.example : opt.letter}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 2. RESPONSIVE SIDEBAR (Merged from MobileTesting)
+        const Sidebar = ({ currentView, onChangeView, isOpen, onClose }) => {
+            const handleNavClick = (view) => {
+                onChangeView(view);
+                if (onClose) onClose(); 
+            };
+
+            return (
+                <>
+                    {/* Backdrop for Mobile */}
+                    <div 
+                        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                        onClick={onClose}
+                    ></div>
+
+                    {/* Sidebar Container */}
+                    <div className={`
+                        fixed md:static inset-y-0 left-0 w-64 theme-bg-panel theme-border border-r z-50 
+                        transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 
+                        sidebar-transition flex flex-col h-full shadow-2xl md:shadow-none
+                    `}>
+                        <div className="p-6 flex justify-between items-center">
+                            <div>
+                                <h1 className="text-xl font-bold theme-text-main flex items-center cursor-pointer" onClick={() => handleNavClick('home')}>
+                                    <span className="theme-text-accent">V-</span>Alphabet
+                                </h1>
+                                <p className="text-xs theme-text-muted mt-1">Học chữ Quốc Ngữ</p>
+                            </div>
+                            {/* Close Button Mobile Only */}
+                            <button onClick={onClose} className="md:hidden theme-text-muted p-1 hover:text-white">
+                                <IconX size={20} />
+                            </button>
+                        </div>
+                        
+                        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+                            <NavItem icon={<IconHome size={18} />} label="Home" active={currentView === 'home'} onClick={() => handleNavClick('home')} />
+                            <NavItem icon={<IconBook size={18} />} label="Phụ Âm" active={currentView === 'consonants'} onClick={() => handleNavClick('consonants')} />
+                            <NavItem icon={<span className="text-lg leading-none font-serif w-[18px] text-center">ă</span>} label="Nguyên Âm" active={currentView === 'vowels'} onClick={() => handleNavClick('vowels')} />
+                            <div className="h-px theme-bg-hover my-2"></div>
+                            <NavItem icon={<IconChart size={18} />} label="Statistics" active={currentView === 'stats'} onClick={() => handleNavClick('stats')} />
+                            <NavItem icon={<IconChart size={18} />} label="Progress" active={currentView === 'progress'} onClick={() => handleNavClick('progress')} />
+                            <NavItem icon={<IconAward size={18} />} label="Achievements" active={currentView === 'achievements'} onClick={() => handleNavClick('achievements')} />
+                        </nav>
+
+                        <div className="p-4 theme-border border-t pb-8 md:pb-4">
+                            <NavItem icon={<IconSettings size={18} />} label="Preferences" active={currentView === 'preferences'} onClick={() => handleNavClick('preferences')} />
+                        </div>
+                    </div>
+                </>
+            );
+        };
+
+        const NavItem = ({ icon, label, active, onClick }) => (
+            <div onClick={onClick} className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg cursor-pointer transition-colors select-none ${active ? 'theme-bg-hover theme-text-main border-l-4 border-blue-500' : 'theme-text-muted hover:theme-text-main hover:theme-bg-hover'}`}>
+                {icon} {label}
+            </div>
+        );
+
+        const App = () => {
+            const [currentView, setCurrentView] = useState('home');
+            const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+            
+            // --- STATE ---
+            const [stats, setStats] = useState({ 
+                sessions: 0, 
+                correct: 0, 
+                attempts: 0, 
+                streak: 0, 
+                bestStreak: 0, 
+                audioStreak: 0,
+                totalTime: 0,
+                fastest: null,
+                slowest: null,
+                stars: 0
+            });
+            const [charHistory, setCharHistory] = useState({});
+            const [unlockedAchievements, setUnlockedAchievements] = useState([]);
+            const [currentTheme, setCurrentTheme] = useState(THEMES_LIST.dark[0]);
+            const startTimeRef = useRef(null);
+
+            // --- THEME ENGINE ---
+            useEffect(() => {
+                const root = document.documentElement;
+                const colors = currentTheme.colors;
+                root.style.setProperty('--bg-main', colors.main);
+                root.style.setProperty('--bg-panel', colors.panel);
+                root.style.setProperty('--bg-hover', colors.hover);
+                root.style.setProperty('--text-main', colors.text);
+                root.style.setProperty('--text-muted', colors.muted);
+                root.style.setProperty('--accent', colors.accent);
+                root.style.setProperty('--border', colors.border);
+            }, [currentTheme]);
+
+            // --- MOBILE RESIZE HANDLER ---
+            useEffect(() => {
+                const handleResize = () => { if (window.innerWidth >= 768) setMobileMenuOpen(false); };
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+
+            // --- GAME LOGIC ---
+            const resetProgress = () => {
+                if(confirm("Are you sure you want to reset all progress?")) {
+                    setStats({ sessions: 0, correct: 0, attempts: 0, streak: 0, bestStreak: 0, audioStreak: 0, totalTime: 0, fastest: null, slowest: null, stars: 0 });
+                    setCharHistory({});
+                    setUnlockedAchievements([]);
+                }
+            };
+
+            const checkAchievements = (newStats, mode, isCorrect) => {
+                const newUnlocks = [...unlockedAchievements];
+                ACHIEVEMENTS_DATA.forEach(ach => {
+                    if (newUnlocks.includes(ach.id)) return;
+                    let earned = false;
+                    
+                    if (ach.cat === 'Milestones') {
+                        if (ach.id === 101 && newStats.correct >= 1) earned = true;
+                        if (ach.id === 102 && newStats.correct >= 100) earned = true;
+                        if (ach.id === 103 && newStats.correct >= 500) earned = true;
+                        if (ach.id === 104 && newStats.correct >= 1000) earned = true;
+                        if (ach.id === 105 && newStats.correct >= 5000) earned = true;
+                    }
+                    if (ach.cat === 'Streaks') {
+                        if (ach.id === 201 && newStats.streak >= 5) earned = true;
+                        if (ach.id === 202 && newStats.streak >= 10) earned = true;
+                        if (ach.id === 203 && newStats.streak >= 25) earned = true;
+                        if (ach.id === 204 && newStats.streak >= 50) earned = true;
+                    }
+                    if (ach.cat === 'Consistency') {
+                         if (ach.id === 301 && newStats.sessions >= 10) earned = true;
+                         if (ach.id === 302 && newStats.sessions >= 50) earned = true;
+                         if (ach.id === 303 && newStats.sessions >= 100) earned = true;
+                    }
+                    if (ach.cat === 'Audio') {
+                        if (ach.id === 501 && mode === 'audio' && isCorrect) earned = true;
+                        if (ach.id === 502 && mode === 'audio' && newStats.correct >= 50) earned = true; // Simplified logic
+                    }
+
+                    if (earned) newUnlocks.push(ach.id);
+                });
+                if (newUnlocks.length > unlockedAchievements.length) setUnlockedAchievements(newUnlocks);
+            };
+
+            const handleSessionStart = () => {
+                setStats(prev => ({ ...prev, sessions: prev.sessions + 1 }));
+                startTimeRef.current = Date.now();
+            };
+
+            const handleSessionUpdate = (isCorrect, charStr, mode) => {
+                const now = Date.now();
+                // Simple delta time for demo purposes (real time would track start of question)
+                const timeTaken = startTimeRef.current ? now - startTimeRef.current : 0; 
+                startTimeRef.current = now; // Reset for next q
+
+                setStats(prev => {
+                    const newCorrect = prev.correct + (isCorrect ? 1 : 0);
+                    const newStreak = isCorrect ? prev.streak + 1 : 0;
+                    const newStars = Math.floor(newCorrect / 20); // Global Stars count
+
+                    // Time logic filters outliers > 10s for realistic stats
+                    const validTime = timeTaken > 0 && timeTaken < 10000;
+                    const newFastest = (validTime && isCorrect && (!prev.fastest || timeTaken < prev.fastest)) ? timeTaken : prev.fastest;
+                    const newSlowest = (validTime && isCorrect && (!prev.slowest || timeTaken > prev.slowest)) ? timeTaken : prev.slowest;
+
+                    const nextStats = {
+                        ...prev,
+                        correct: newCorrect,
+                        attempts: prev.attempts + 1,
+                        streak: newStreak,
+                        bestStreak: Math.max(prev.bestStreak, newStreak),
+                        totalTime: prev.totalTime + (validTime ? timeTaken : 0),
+                        fastest: newFastest,
+                        slowest: newSlowest,
+                        stars: newStars
+                    };
+                    checkAchievements(nextStats, mode, isCorrect);
+                    return nextStats;
+                });
+
+                setCharHistory(prev => {
+                    const current = prev[charStr] || { correct: 0, attempts: 0 };
+                    return { ...prev, [charStr]: { correct: current.correct + (isCorrect ? 1 : 0), attempts: current.attempts + 1 }};
+                });
+            };
+
+            const renderContent = () => {
+                switch(currentView) {
+                    case 'home': return <HomeScreen onNavigate={setCurrentView} />;
+                    case 'consonants': 
+                        return <PracticeScreen title="Phụ âm (Consonants)" desc="Practice identifying consonants visually or by ear." data={CONSONANT_DATA} onSessionStart={handleSessionStart} onSessionUpdate={handleSessionUpdate} />;
+                    case 'vowels': 
+                        return <PracticeScreen title="Nguyên âm (Vowels)" desc="Practice identifying vowels and tones visually or by ear." data={VOWEL_DATA} onSessionStart={handleSessionStart} onSessionUpdate={handleSessionUpdate} />;
+                    case 'stats': return <StatsScreen stats={stats} />;
+                    case 'progress': return <ProgressScreen stats={stats} charHistory={charHistory} onReset={resetProgress} />;
+                    case 'achievements': return <AchievementsScreen unlockedIds={unlockedAchievements} />;
+                    case 'preferences': return <PreferencesScreen activeTheme={currentTheme} onChangeTheme={setCurrentTheme} />;
+                    default: return <HomeScreen />;
+                }
+            };
+
+            return (
+                <div className="flex h-screen w-full theme-bg-main flex-col md:flex-row bg-pattern">
+                    <MobileHeader onMenuClick={() => setMobileMenuOpen(true)} />
+                    <Sidebar 
+                        currentView={currentView} 
+                        onChangeView={setCurrentView} 
+                        isOpen={mobileMenuOpen} 
+                        onClose={() => setMobileMenuOpen(false)} 
+                    />
+                    <main className="flex-1 h-full overflow-y-auto p-4 md:p-8 relative w-full">
+                        {renderContent()}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
